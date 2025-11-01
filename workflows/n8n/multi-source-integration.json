@@ -1,0 +1,419 @@
+{
+  "name": "Eagle Eye - Multi-Source Integration Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook-estimate",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "eagle-eye-estimate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source }}",
+              "operation": "equals",
+              "value2": "odoo"
+            }
+          ]
+        }
+      },
+      "id": "source-router",
+      "name": "Route by Source",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://eagle-odoo-connector:5002/sync/odoo-to-eagle",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ estimate_id: $json.estimate_id }) }}"
+      },
+      "id": "fetch-odoo",
+      "name": "Fetch from Odoo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "url": "=http://erpnext:8080/api/resource/Quotation/{{ $json.quotation_id }}",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "fetch-erpnext",
+      "name": "Fetch from ERPNext",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "url": "=http://ifcopenshell:5001/qto",
+        "method": "POST",
+        "sendBinaryData": true,
+        "binaryPropertyName": "ifc_file",
+        "options": {}
+      },
+      "id": "ifc-qto",
+      "name": "IFC Quantity Takeoff",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 600],
+      "notes": "Extract quantities from IFC model"
+    },
+    {
+      "parameters": {
+        "functionCode": "const source = $input.first().json.source;\nconst data = $input.first().json;\n\nlet quantities = [];\n\nif (source === 'odoo') {\n  quantities = data.odoo_estimate.quantities;\n} else if (source === 'erpnext') {\n  quantities = data.data.items.map(item => ({\n    wbs: item.cost_center || 'General',\n    assembly: item.item_name,\n    item: item.description,\n    uom: item.uom,\n    quantity: item.qty,\n    unit_cost: item.rate,\n    trade: item.item_group || 'General',\n    confidence: 'Medium'\n  }));\n} else if (source === 'ifc') {\n  quantities = data.data.quantities;\n}\n\nreturn {\n  json: {\n    project_id: data.project_id || `import_${Date.now()}`,\n    quantities: quantities,\n    spec_tier: data.spec_tier || 'Standard',\n    source: source,\n    metadata: data.metadata || {}\n  }\n};"
+      },
+      "id": "normalize-data",
+      "name": "Normalize to Eagle Eye Format",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://api:8000/api/parser/process",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify($json) }}"
+      },
+      "id": "eagle-parser",
+      "name": "Eagle Eye Parser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 300],
+      "notes": "Add confidence scoring"
+    },
+    {
+      "parameters": {
+        "url": "http://rules:8001/api/rules/check",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ plan_graph: $json.plan_graph, jurisdiction: $json.jurisdiction }) }}"
+      },
+      "id": "eagle-rules",
+      "name": "Code Compliance Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 300],
+      "notes": "IRC/IECC/NEC/GA rules"
+    },
+    {
+      "parameters": {
+        "url": "http://pricing:8002/api/pricing/estimate",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ quantities: $json.quantities, spec_tier: $json.spec_tier, cbsa_code: $json.cbsa_code, zip_code: $json.zip_code }) }}"
+      },
+      "id": "eagle-pricing",
+      "name": "Regional Pricing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1450, 300],
+      "notes": "Spec tier + regional factors"
+    },
+    {
+      "parameters": {
+        "url": "http://reports:8003/api/reports/proposal",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ project: $json.project, estimate: $json.estimate, findings: $json.findings, template: 'proposal_comprehensive' }) }}"
+      },
+      "id": "eagle-reports",
+      "name": "Generate Proposal PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1650, 300],
+      "notes": "Comprehensive A-I sections"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source }}",
+              "operation": "equals",
+              "value2": "odoo"
+            }
+          ]
+        }
+      },
+      "id": "route-response",
+      "name": "Route Response",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://eagle-odoo-connector:5002/sync/eagle-to-odoo",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ estimate_id: $json.odoo_estimate_id, eagle_result: $json }) }}"
+      },
+      "id": "push-to-odoo",
+      "name": "Update Odoo Estimate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2050, 200]
+    },
+    {
+      "parameters": {
+        "url": "=http://erpnext:8080/api/resource/Quotation/{{ $json.quotation_id }}",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify({ code_review_status: 'Reviewed', findings_count: $json.findings.length, risk_level: $json.risk_level }) }}"
+      },
+      "id": "push-to-erpnext",
+      "name": "Update ERPNext Quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2050, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create Xactimate CSV export\nconst estimate = $input.first().json.estimate;\nconst findings = $input.first().json.findings;\n\nlet csv = 'WBS,Assembly,Item,UOM,Qty,Unit,Ext,Notes\\n';\n\nfor (const [trade, items] of Object.entries(estimate.base)) {\n  for (const item of items) {\n    const notes = item.needs_rfi ? 'RFI Required' : '';\n    csv += `${item.wbs},${item.assembly},\"${item.line_item}\",${item.uom},${item.qty},${item.unit_cost},${item.ext_cost},\"${notes}\"\\n`;\n  }\n}\n\nreturn {\n  json: {\n    csv: csv,\n    filename: `estimate_${Date.now()}.csv`\n  }\n};"
+      },
+      "id": "xactimate-export",
+      "name": "Generate Xactimate CSV",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 500],
+      "notes": "For insurance/adjuster workflows"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "findings",
+              "aggregation": "count",
+              "outputFieldName": "total_findings"
+            },
+            {
+              "fieldToAggregate": "findings[severity=Red]",
+              "aggregation": "count",
+              "outputFieldName": "red_findings"
+            }
+          ]
+        }
+      },
+      "id": "aggregate-stats",
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1650, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@eagleeye.example.com",
+        "toEmail": "={{ $json.pm_email }}",
+        "subject": "=Eagle Eye Review Complete: {{ $json.project_name }}",
+        "emailType": "html",
+        "message": "=<h2>Code Review Complete</h2><p>Your estimate has been processed through Eagle Eye.</p><p><strong>Summary:</strong></p><ul><li>Total Findings: {{ $json.total_findings }}</li><li>Critical (Red): {{ $json.red_findings }}</li><li>Estimated Cost: ${{ $json.estimate.summary.grand_total }}</li></ul><p>See attached proposal PDF for details.</p>",
+        "options": {
+          "attachments": "pdf_data.proposal.pdf"
+        }
+      },
+      "id": "email-notify",
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [2050, 600]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "source-router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "source-router": {
+      "main": [
+        [
+          {
+            "node": "fetch-odoo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fetch-erpnext",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ifc-qto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-odoo": {
+      "main": [
+        [
+          {
+            "node": "normalize-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-erpnext": {
+      "main": [
+        [
+          {
+            "node": "normalize-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ifc-qto": {
+      "main": [
+        [
+          {
+            "node": "normalize-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-data": {
+      "main": [
+        [
+          {
+            "node": "eagle-parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "eagle-parser": {
+      "main": [
+        [
+          {
+            "node": "eagle-rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "eagle-rules": {
+      "main": [
+        [
+          {
+            "node": "eagle-pricing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "eagle-pricing": {
+      "main": [
+        [
+          {
+            "node": "eagle-reports",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "eagle-reports": {
+      "main": [
+        [
+          {
+            "node": "route-response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "aggregate-stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-response": {
+      "main": [
+        [
+          {
+            "node": "push-to-odoo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "push-to-erpnext",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate-stats": {
+      "main": [
+        [
+          {
+            "node": "xactimate-export",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "email-notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

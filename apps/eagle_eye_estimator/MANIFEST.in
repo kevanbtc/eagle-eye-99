@@ -1,0 +1,4 @@
+include MANIFEST.in
+include README.md
+recursive-include eagle_eye_estimator *
+prune **/__pycache__

@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.env.local
+.env
+dist/
+build/
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

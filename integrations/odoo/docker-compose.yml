@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  odoo:
+    image: odoo:17.0
+    container_name: eagle-odoo
+    depends_on:
+      - odoo-db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=odoo-db
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./config:/etc/odoo
+    networks:
+      - eagle-net
+
+  odoo-db:
+    image: postgres:15-alpine
+    container_name: eagle-odoo-db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    networks:
+      - eagle-net
+
+  eagle-connector:
+    build: .
+    container_name: eagle-odoo-connector
+    ports:
+      - "5002:5002"
+    environment:
+      - ODOO_URL=http://odoo:8069
+      - ODOO_DB=odoo
+      - ODOO_USERNAME=admin
+      - ODOO_PASSWORD=admin
+      - EAGLE_API_URL=http://api:8000
+    networks:
+      - eagle-net
+    depends_on:
+      - odoo
+
+volumes:
+  odoo-data:
+  odoo-db-data:
+
+networks:
+  eagle-net:
+    external: true
+    name: eagle-eye-2_default

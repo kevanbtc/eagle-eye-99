@@ -1,0 +1,12 @@
+# Requirements for Eagle Eye Configuration Module
+# 
+# Install with: pip install -r config/requirements.txt
+
+# Configuration management
+pydantic==2.11.0
+
+# Environment variables
+python-dotenv==1.1.1
+
+# Optional: For structured logging with settings
+serilog-python==0.1.0

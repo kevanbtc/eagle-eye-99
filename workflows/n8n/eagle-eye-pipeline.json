@@ -1,0 +1,118 @@
+{
+  "name": "Eagle Eye Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ingest"
+      },
+      "name": "Webhook - Receive Upload",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "webhook-1"
+    },
+    {
+      "parameters": {
+        "url": "http://api:8000/projects",
+        "method": "POST",
+        "options": {
+          "bodyContentType": "json"
+        },
+        "bodyParametersJson": "={{ $json }}"
+      },
+      "name": "Create Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "create-project"
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    project_id: $json.id,\n    modes: ['parse', 'rules', 'price', 'render']\n  }\n}];"
+      },
+      "name": "Prepare Pipeline",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "id": "prepare-pipeline"
+    },
+    {
+      "parameters": {
+        "url": "=http://api:8000/projects/{{ $json.project_id }}/run",
+        "method": "POST",
+        "options": {
+          "bodyContentType": "json"
+        },
+        "bodyParametersJson": "={{ $json }}"
+      },
+      "name": "Run Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "id": "run-pipeline"
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "name": "Wait for Processing",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "id": "wait"
+    },
+    {
+      "parameters": {
+        "url": "=http://api:8000/projects/{{ $json.project_id }}/reports",
+        "method": "GET"
+      },
+      "name": "Fetch Reports",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "id": "fetch-reports"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@eagleeye.ai",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Your Eagle Eye Proposal is Ready",
+        "text": "Your construction plan review is complete.\\n\\nProposal PDF: {{ $json.proposal_pdf }}\\nXactimate CSV: {{ $json.xactimate_csv }}\\n\\nThank you,\\nEagle Eye Team",
+        "attachments": "={{ $json.proposal_pdf }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "id": "send-email"
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Upload": {
+      "main": [[{"node": "Create Project", "type": "main", "index": 0}]]
+    },
+    "Create Project": {
+      "main": [[{"node": "Prepare Pipeline", "type": "main", "index": 0}]]
+    },
+    "Prepare Pipeline": {
+      "main": [[{"node": "Run Pipeline", "type": "main", "index": 0}]]
+    },
+    "Run Pipeline": {
+      "main": [[{"node": "Wait for Processing", "type": "main", "index": 0}]]
+    },
+    "Wait for Processing": {
+      "main": [[{"node": "Fetch Reports", "type": "main", "index": 0}]]
+    },
+    "Fetch Reports": {
+      "main": [[{"node": "Send Email", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

@@ -1,0 +1,15 @@
+{
+  "doctype": "DocType",
+  "name": "Xactimate Map",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "fields": [
+    {"fieldname":"assembly","label":"Assembly","fieldtype":"Link","options":"Assembly","reqd":1,"in_list_view":1},
+    {"fieldname":"xb_code","label":"XB Code","fieldtype":"Data","reqd":1,"in_list_view":1},
+    {"fieldname":"unit_translation","label":"Unit Translation","fieldtype":"Data","description":"e.g., SF->EA conversion notes"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

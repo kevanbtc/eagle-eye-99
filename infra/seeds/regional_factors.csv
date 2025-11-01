@@ -1,0 +1,8 @@
+region,labor_idx,material_idx,demo_idx,permit_idx,effective_dt
+Atlanta_GA,1.02,1.00,1.05,1.10,2025-01-01
+Athens_GA,0.95,0.98,1.00,1.05,2025-01-01
+Augusta_GA,0.93,0.97,0.98,1.03,2025-01-01
+Columbus_GA,0.94,0.98,1.00,1.04,2025-01-01
+Macon_GA,0.92,0.96,0.97,1.02,2025-01-01
+Savannah_GA,0.96,0.99,1.02,1.06,2025-01-01
+Albany_GA,0.90,0.95,0.95,1.00,2025-01-01

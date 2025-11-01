@@ -1,0 +1,53 @@
+{% set summary = (doc.summary or '{}') | loads %}
+<div style="font-family:Inter,system-ui,Arial; font-size:12px; color:#111;">
+  <h1 style="margin:0 0 8px;">Proposal</h1>
+  <div style="font-size:11px; color:#555;">Estimate ID: {{ doc.name }} • Project: {{ doc.project }}</div>
+  <hr/>
+
+  <h2 style="margin:16px 0 6px;">Executive Overview</h2>
+  <p>{{ doc.scope or 'Scope per attached estimate and drawings.' }}</p>
+
+  <h2 style="margin:16px 0 6px;">Risk Register (Excerpt)</h2>
+  <p>See detailed Risk Register for code-cited issues and recommendations.</p>
+
+  <h2 style="margin:16px 0 6px;">Estimate (Base)</h2>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border-bottom:1px solid #ddd; padding:6px;">Assembly</th>
+        <th style="text-align:right; border-bottom:1px solid #ddd; padding:6px;">Qty</th>
+        <th style="text-align:right; border-bottom:1px solid #ddd; padding:6px;">Unit</th>
+        <th style="text-align:right; border-bottom:1px solid #ddd; padding:6px;">Unit Cost</th>
+        <th style="text-align:right; border-bottom:1px solid #ddd; padding:6px;">Ext</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in doc.assemblies %}
+      <tr>
+        <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ row.assembly }}</td>
+        <td style="padding:6px; text-align:right; border-bottom:1px solid #f0f0f0;">{{ row.qty or 0 }}</td>
+        <td style="padding:6px; text-align:right; border-bottom:1px solid #f0f0f0;">{{ row.unit or '' }}</td>
+        <td style="padding:6px; text-align:right; border-bottom:1px solid #f0f0f0;">{{ row.unit_cost or 0 }}</td>
+        <td style="padding:6px; text-align:right; border-bottom:1px solid #f0f0f0;">{{ row.ext or 0 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 style="margin:16px 0 6px;">Summary</h2>
+  <table style="width:300px; border-collapse:collapse;">
+    <tr><td>Subtotal</td><td style="text-align:right;">{{ summary.subtotal or 0 }}</td></tr>
+    <tr><td>Overhead</td><td style="text-align:right;">{{ (summary.op or 0) * 100 }}%</td></tr>
+    <tr><td>Contingency</td><td style="text-align:right;">{{ (summary.cont or 0) * 100 }}%</td></tr>
+    <tr><td><b>Total</b></td><td style="text-align:right;"><b>{{ summary.total or 0 }}</b></td></tr>
+  </table>
+
+  <h2 style="margin:16px 0 6px;">Draw Schedule</h2>
+  <p>Milestones per lender requirements. A typical schedule can be attached or adjusted at award.</p>
+
+  <h2 style="margin:16px 0 6px;">Submittals</h2>
+  <p>Standard product data, shop drawings, and inspection reports included. See appendix.</p>
+
+  <h2 style="margin:16px 0 6px;">Appendix</h2>
+  <p>Full estimate, alternates, allowances, and risk register available as attachments or upon request.</p>
+</div>

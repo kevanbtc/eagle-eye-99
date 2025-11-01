@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "EagleEye.Modules.Estimating/1.0.0": {
+        "dependencies": {
+          "EagleEye.Application": "1.0.0",
+          "EagleEye.Domain": "1.0.0"
+        },
+        "runtime": {
+          "EagleEye.Modules.Estimating.dll": {}
+        }
+      },
+      "EagleEye.Application/1.0.0": {
+        "dependencies": {
+          "EagleEye.Domain": "1.0.0"
+        },
+        "runtime": {
+          "EagleEye.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "EagleEye.Domain/1.0.0": {
+        "runtime": {
+          "EagleEye.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "EagleEye.Modules.Estimating/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "EagleEye.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "EagleEye.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

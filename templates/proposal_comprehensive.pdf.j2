@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Eagle Eye Comprehensive Proposal - {{ project.name }}</title>
+    <style>
+        @page { 
+            margin: 0.75in; 
+            @top-right { content: "Page " counter(page) " of " counter(pages); }
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1a202c; }
+        h1 { color: #1a365d; font-size: 22pt; border-bottom: 4px solid #2c5282; padding-bottom: 12px; margin-bottom: 25px; page-break-after: avoid; }
+        h2 { color: #2c5282; font-size: 17pt; margin-top: 35px; margin-bottom: 15px; page-break-after: avoid; }
+        h3 { color: #2d3748; font-size: 14pt; margin-top: 22px; margin-bottom: 12px; page-break-after: avoid; }
+        h4 { color: #4a5568; font-size: 12pt; margin-top: 15px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; page-break-inside: auto; }
+        th, td { border: 1px solid #cbd5e0; padding: 9px; text-align: left; font-size: 10pt; }
+        th { background-color: #edf2f7; font-weight: 600; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        .red { color: #c53030; font-weight: bold; }
+        .orange { color: #c05621; font-weight: bold; }
+        .yellow { color: #975a16; font-weight: bold; }
+        .severity-red { background-color: #fff5f5; }
+        .severity-orange { background-color: #fffaf0; }
+        .severity-yellow { background-color: #fefcbf; }
+        .header { text-align: center; margin-bottom: 50px; }
+        .logo { font-size: 28pt; color: #1a365d; font-weight: bold; margin-bottom: 10px; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #cbd5e0; font-size: 9pt; color: #718096; }
+        .callout { background-color: #ebf8ff; border-left: 4px solid #3182ce; padding: 15px; margin: 20px 0; }
+        .warning { background-color: #fffaf0; border-left: 4px solid #dd6b20; padding: 15px; margin: 20px 0; }
+        .info-box { background-color: #f7fafc; border: 1px solid #cbd5e0; padding: 12px; margin: 15px 0; }
+        .page-break { page-break-before: always; }
+        .no-break { page-break-inside: avoid; }
+        .totals-row { background-color: #edf2f7; font-weight: bold; }
+        .grand-total-row { background-color: #2c5282; color: white; font-weight: bold; font-size: 11pt; }
+        ul { margin: 10px 0; padding-left: 25px; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <!-- COVER PAGE -->
+    <div class="header">
+        <div class="logo">EAGLE EYE</div>
+        <p style="font-size: 13pt; color: #4a5568; margin: 10px 0;">Plan Review & Construction Pricing Proposal</p>
+        <hr style="width: 200px; margin: 25px auto; border: 1px solid #cbd5e0;">
+        <h1 style="border: none;">{{ project.name }}</h1>
+        <p style="font-size: 11pt;">{{ project.address_json.line1 if project.address_json else "Project Address" }}</p>
+        <p style="font-size: 11pt;">{{ project.address_json.city if project.address_json else "" }}, {{ project.address_json.state if project.address_json else "" }} {{ project.address_json.zip_code if project.address_json else "" }}</p>
+        <div style="margin-top: 40px;">
+            <p><strong>Prepared For:</strong> {{ account.name if account else "Client Name" }}</p>
+            <p><strong>Date:</strong> {{ now.strftime("%B %d, %Y") if now else "January 2025" }}</p>
+            <p><strong>Proposal Valid Until:</strong> {{ (now + timedelta(days=30)).strftime("%B %d, %Y") if now else "February 2025" }}</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION A: EXECUTIVE SUMMARY -->
+    <h2>A. Executive Summary</h2>
+    
+    <div class="callout">
+        <p style="margin: 0; font-size: 11pt;">
+            <strong>Project Overview:</strong> This comprehensive proposal presents our analysis of {{ project.name }}, 
+            encompassing full code compliance review, structural assessment, and detailed construction pricing.
+        </p>
+    </div>
+
+    <h3>Project Snapshot</h3>
+    <table class="no-break">
+        <tr>
+            <th style="width: 35%;">Attribute</th>
+            <th>Details</th>
+        </tr>
+        <tr>
+            <td><strong>Project Type</strong></td>
+            <td>{{ project.scope or "Residential Construction" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Living Area</strong></td>
+            <td>{{ "%,.0f"|format(project.living_sf) if project.living_sf else "TBD" }} SF</td>
+        </tr>
+        <tr>
+            <td><strong>Total Area</strong></td>
+            <td>{{ "%,.0f"|format(project.total_sf) if project.total_sf else "TBD" }} SF</td>
+        </tr>
+        <tr>
+            <td><strong>Spec Tier</strong></td>
+            <td>{{ project.spec_tier or "Standard" }} Finishes</td>
+        </tr>
+        <tr>
+            <td><strong>Jurisdiction</strong></td>
+            <td>{{ jurisdiction.municipality or jurisdiction.county or "County" }}, {{ jurisdiction.state }}</td>
+        </tr>
+        <tr>
+            <td><strong>Code Set</strong></td>
+            <td>{{ jurisdiction.code_set }}</td>
+        </tr>
+        <tr>
+            <td><strong>Climate Zone</strong></td>
+            <td>IECC Zone {{ jurisdiction.climate_zone or "3" }}</td>
+        </tr>
+    </table>
+
+    <h3>Review Findings Summary</h3>
+    <p>Our PE-grade code compliance review identified <strong>{{ findings|length }}</strong> items requiring attention:</p>
+    <table class="no-break">
+        <tr>
+            <th style="width: 20%;">Severity</th>
+            <th style="width: 15%;">Count</th>
+            <th>Impact Summary</th>
+        </tr>
+        <tr class="severity-red">
+            <td class="red">RED (Critical)</td>
+            <td class="red">{{ findings|selectattr("severity", "equalto", "Red")|list|length }}</td>
+            <td>Permit rejection risk; requires immediate resolution before submission</td>
+        </tr>
+        <tr class="severity-orange">
+            <td class="orange">ORANGE (High)</td>
+            <td class="orange">{{ findings|selectattr("severity", "equalto", "Orange")|list|length }}</td>
+            <td>Likely review cycle delay (2-4 weeks); fix before first submission</td>
+        </tr>
+        <tr class="severity-yellow">
+            <td class="yellow">YELLOW (Moderate)</td>
+            <td class="yellow">{{ findings|selectattr("severity", "equalto", "Yellow")|list|length }}</td>
+            <td>Informational; address during construction or via field clarification</td>
+        </tr>
+    </table>
+
+    <h3>Pricing Summary</h3>
+    <table class="no-break">
+        <tr>
+            <td style="width: 70%; text-align: right; font-weight: 600;">Base Construction Cost:</td>
+            <td style="text-align: right; font-size: 11pt;">${{ "%,.2f"|format(estimate.summary.subtotal) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">Overhead ({{ estimate.summary.overhead_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.overhead_amt) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">Profit ({{ estimate.summary.profit_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.profit_amt) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">Contingency ({{ estimate.summary.contingency_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.contingency_amt) }}</td>
+        </tr>
+        <tr class="grand-total-row">
+            <td style="text-align: right; padding: 12px;">TOTAL PROJECT COST:</td>
+            <td style="text-align: right; padding: 12px; font-size: 13pt;">${{ "%,.2f"|format(estimate.summary.grand_total) }}</td>
+        </tr>
+    </table>
+
+    <h3>Recommended Next Steps</h3>
+    <ol>
+        <li><strong>Address Critical (RED) Findings:</strong> Resolve {{ findings|selectattr("severity", "equalto", "Red")|list|length }} permit-blocking items before submission</li>
+        <li><strong>Coordinate Submittals:</strong> {{ submittals|length if submittals else 0 }} vendor submittals required (see Section H)</li>
+        <li><strong>Finalize Specifications:</strong> Confirm finish selections and alternates (Section E)</li>
+        <li><strong>Permit Submission:</strong> Target submission within 3-4 weeks post-resolution</li>
+        <li><strong>Schedule Kickoff:</strong> Mobilization within 2 weeks of permit approval</li>
+    </ol>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION B: RISK REGISTER -->
+    <h2>B. Risk Register & Code Compliance Overview</h2>
+    
+    <p>
+        This section presents all code compliance findings identified during our PE-grade plan review. 
+        Each finding includes the specific code citation, consequence if unresolved, recommended fix, 
+        and value engineering alternatives where applicable.
+    </p>
+
+    <h3>Risk Matrix</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 8%;">Code</th>
+                <th style="width: 10%;">Severity</th>
+                <th style="width: 15%;">Discipline</th>
+                <th style="width: 20%;">Code Citation</th>
+                <th style="width: 22%;">Consequence</th>
+                <th style="width: 25%;">Fix Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finding in findings %}
+            <tr class="severity-{{ finding.severity|lower }}">
+                <td>{{ finding.finding_code }}</td>
+                <td class="{{ finding.severity|lower }}">{{ finding.severity }}</td>
+                <td>{{ finding.discipline }}</td>
+                <td style="font-size: 9pt;">{{ finding.code_citation }}</td>
+                <td style="font-size: 9pt;">{{ finding.consequence }}</td>
+                <td style="font-size: 9pt;">{{ finding.fix[:100] }}...</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if findings|selectattr("severity", "equalto", "Red")|list|length > 0 %}
+    <div class="warning">
+        <h4 style="margin-top: 0; color: #c53030;">⚠️ Critical Items Requiring Immediate Attention</h4>
+        <p>The following {{ findings|selectattr("severity", "equalto", "Red")|list|length }} RED findings must be resolved before permit submission:</p>
+        <ul>
+            {% for finding in findings|selectattr("severity", "equalto", "Red") %}
+            <li><strong>{{ finding.finding_code }}:</strong> {{ finding.code_citation }} - {{ finding.consequence[:120] }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION C: DETAILED CODE ANALYSIS -->
+    <h2>C. Detailed Code Analysis by Discipline</h2>
+
+    {% set disciplines = findings|groupby('discipline') %}
+    {% for discipline, discipline_findings in disciplines %}
+    <h3>{{ discipline }}</h3>
+    
+    {% for finding in discipline_findings %}
+    <div class="info-box no-break">
+        <h4 style="margin-top: 0; color: #2c5282;">
+            {{ finding.finding_code }}: {{ finding.code_citation }}
+            <span class="{{ finding.severity|lower }}" style="float: right;">[{{ finding.severity }}]</span>
+        </h4>
+        
+        <p><strong>Location:</strong> {{ finding.location }}</p>
+        
+        <p><strong>Consequence:</strong> {{ finding.consequence }}</p>
+        
+        <p><strong>Required Fix:</strong> {{ finding.fix }}</p>
+        
+        {% if finding.ve_alt %}
+        <p style="background-color: #ebf8ff; padding: 8px; border-radius: 4px;">
+            <strong>💡 Value Engineering Option:</strong> {{ finding.ve_alt }}
+        </p>
+        {% endif %}
+        
+        {% if finding.submittal_needed %}
+        <p style="background-color: #fef5e7; padding: 8px; border-radius: 4px;">
+            <strong>📋 Submittal Required:</strong> {{ finding.submittal_needed }}
+        </p>
+        {% endif %}
+        
+        {% if finding.evidence_refs %}
+        <p style="font-size: 9pt; color: #718096;">
+            <strong>Evidence:</strong> {{ finding.evidence_refs|join(", ") }}
+        </p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION D: STRUCTURAL FOCUS AREAS -->
+    <h2>D. Structural Focus Areas</h2>
+    
+    {% set structural_findings = findings|selectattr('discipline', 'in', ['Structural', 'Lateral/Wind', 'Foundation']) %}
+    
+    <h3>Lateral System (Wind/Seismic)</h3>
+    <div class="info-box">
+        <p><strong>Design Wind Speed:</strong> {{ jurisdiction.metadata.wind_speed if jurisdiction.metadata else "TBD" }} mph (Ultimate)</p>
+        <p><strong>Seismic Design Category:</strong> {{ jurisdiction.seismic_category or "TBD" }}</p>
+        <p><strong>Bracing Method:</strong> CS-WSP (Continuous Sheathing with Wood Structural Panels) recommended</p>
+    </div>
+
+    {% for finding in structural_findings %}
+    {% if 'braced' in finding.code_citation|lower or 'lateral' in finding.discipline|lower %}
+    <h4>{{ finding.finding_code }}: {{ finding.code_citation }}</h4>
+    <p>{{ finding.fix }}</p>
+    {% endif %}
+    {% endfor %}
+
+    <h3>Vertical Load Path</h3>
+    {% for finding in structural_findings %}
+    {% if 'floor' in finding.code_citation|lower or 'beam' in finding.code_citation|lower or 'joist' in finding.code_citation|lower %}
+    <h4>{{ finding.finding_code }}: {{ finding.code_citation }}</h4>
+    <p>{{ finding.fix }}</p>
+    {% endif %}
+    {% endfor %}
+
+    <h3>Foundation System</h3>
+    {% for finding in structural_findings %}
+    {% if 'foundation' in finding.code_citation|lower or 'footing' in finding.code_citation|lower or 'r403' in finding.code_citation|lower %}
+    <h4>{{ finding.finding_code }}: {{ finding.code_citation }}</h4>
+    <p>{{ finding.fix }}</p>
+    {% endif %}
+    {% endfor %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION E: BUILDING ENVELOPE & ENERGY -->
+    <h2>E. Building Envelope & Energy Compliance</h2>
+    
+    {% set envelope_findings = findings|selectattr('discipline', 'in', ['Envelope', 'Energy', 'Insulation']) %}
+    
+    <h3>Insulation Requirements (IECC Climate Zone {{ jurisdiction.climate_zone or "3" }})</h3>
+    <table class="no-break">
+        <tr>
+            <th>Assembly</th>
+            <th>Required R-Value</th>
+            <th>Notes</th>
+        </tr>
+        <tr>
+            <td>Ceiling (Vented Attic)</td>
+            <td>R-30 minimum</td>
+            <td>R-38 recommended for resale value</td>
+        </tr>
+        <tr>
+            <td>Wall Cavities</td>
+            <td>R-13 minimum</td>
+            <td>R-15 for 2x6 framing upgrade</td>
+        </tr>
+        <tr>
+            <td>Slab Edge</td>
+            <td>R-5 minimum</td>
+            <td>Below grade perimeter insulation</td>
+        </tr>
+        <tr>
+            <td>Windows</td>
+            <td>U-0.40 / SHGC 0.30</td>
+            <td>Or prescriptive path alternative</td>
+        </tr>
+    </table>
+
+    <h3>Air Sealing & Infiltration</h3>
+    <p><strong>Target:</strong> ≤ 5 ACH50 (Blower door test required)</p>
+    
+    {% for finding in envelope_findings %}
+    <h4>{{ finding.finding_code }}: {{ finding.code_citation }}</h4>
+    <p><strong>Fix:</strong> {{ finding.fix }}</p>
+    {% if finding.ve_alt %}
+    <p style="background-color: #ebf8ff; padding: 8px;"><strong>VE Option:</strong> {{ finding.ve_alt }}</p>
+    {% endif %}
+    {% endfor %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION F: DETAILED COST ESTIMATE -->
+    <h2>F. Detailed Cost Estimate</h2>
+    
+    <p>
+        The following estimate is based on {{ project.spec_tier or "Standard" }} specification tier with 
+        regional adjustments for {{ jurisdiction.municipality or jurisdiction.county }}, {{ jurisdiction.state }}.
+    </p>
+
+    {% for trade, items in estimate.base.items() %}
+    <h3>{{ trade }}</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 8%;">WBS</th>
+                <th style="width: 20%;">Assembly</th>
+                <th style="width: 25%;">Line Item</th>
+                <th style="width: 8%;">UoM</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 12%;">Unit Cost</th>
+                <th style="width: 12%;">Ext Cost</th>
+                <th style="width: 5%;">Conf</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td style="font-size: 9pt;">{{ item.wbs }}</td>
+                <td style="font-size: 9pt;">{{ item.assembly }}</td>
+                <td style="font-size: 9pt;">{{ item.line_item }}</td>
+                <td>{{ item.uom }}</td>
+                <td style="text-align: right;">{{ "%,.2f"|format(item.qty) }}</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(item.unit_cost) }}</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(item.ext_cost) }}</td>
+                <td style="text-align: center; font-size: 9pt; {% if item.qty_confidence == 'Low' %}color: #c05621;{% endif %}">
+                    {{ item.qty_confidence[0] if item.qty_confidence else "M" }}
+                </td>
+            </tr>
+            {% endfor %}
+            <tr class="totals-row">
+                <td colspan="6" style="text-align: right;">{{ trade }} Subtotal:</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(items|sum(attribute='ext_cost')) }}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endfor %}
+
+    <h3>Summary Totals</h3>
+    <table class="no-break">
+        <tr>
+            <td style="width: 75%; text-align: right; font-weight: 600;">Direct Construction Cost:</td>
+            <td style="text-align: right; font-weight: 600;">${{ "%,.2f"|format(estimate.summary.subtotal) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">General Conditions & Overhead ({{ estimate.summary.overhead_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.overhead_amt) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">Builder Profit ({{ estimate.summary.profit_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.profit_amt) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right; font-weight: 600;">Subtotal with O&P:</td>
+            <td style="text-align: right; font-weight: 600;">${{ "%,.2f"|format(estimate.summary.total) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: right;">Contingency Reserve ({{ estimate.summary.contingency_pct }}%):</td>
+            <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.contingency_amt) }}</td>
+        </tr>
+        <tr class="grand-total-row">
+            <td style="text-align: right; padding: 14px; font-size: 12pt;">TOTAL PROJECT INVESTMENT:</td>
+            <td style="text-align: right; padding: 14px; font-size: 14pt;">${{ "%,.2f"|format(estimate.summary.grand_total) }}</td>
+        </tr>
+    </table>
+
+    {% if estimate.alternates %}
+    <h3>Pricing Alternates</h3>
+    {% for alt_name, alt_items in estimate.alternates.items() %}
+    <h4>Alternate: {{ alt_name }}</h4>
+    <p><strong>Delta:</strong> ${{ "%,.2f"|format(alt_items|sum(attribute='ext_cost')) }}</p>
+    {% endfor %}
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION G: DRAW SCHEDULE -->
+    <h2>G. Payment Draw Schedule</h2>
+    
+    <p>Proposed payment schedule based on construction milestones:</p>
+    
+    <table class="no-break">
+        <thead>
+            <tr>
+                <th style="width: 10%;">Draw #</th>
+                <th style="width: 25%;">Milestone</th>
+                <th style="width: 40%;">Scope Completed</th>
+                <th style="width: 12%;">% Complete</th>
+                <th style="width: 13%;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Permit & Mobilization</td>
+                <td>Permits issued, site mobilization, temp services</td>
+                <td style="text-align: right;">5%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.05) }}</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Foundation Complete</td>
+                <td>Footings, foundation walls, backfill, underslab MEP</td>
+                <td style="text-align: right;">15%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.15) }}</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Framing Complete</td>
+                <td>Floor, wall, roof framing; windows/doors installed</td>
+                <td style="text-align: right;">35%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.35) }}</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Dry-In Complete</td>
+                <td>Roof complete, siding, exterior trim, rough MEP</td>
+                <td style="text-align: right;">55%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.55) }}</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Insulation & Drywall</td>
+                <td>Insulation, drywall hung/finished, interior trim started</td>
+                <td style="text-align: right;">70%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.70) }}</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Finishes Complete</td>
+                <td>Paint, flooring, cabinets, trim, fixtures</td>
+                <td style="text-align: right;">90%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.90) }}</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Final / CO</td>
+                <td>Punch list, final inspections, Certificate of Occupancy</td>
+                <td style="text-align: right;">95%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.95) }}</td>
+            </tr>
+            <tr class="totals-row">
+                <td colspan="3" style="text-align: right;"><strong>Total Draws (95%):</strong></td>
+                <td style="text-align: right;"><strong>95%</strong></td>
+                <td style="text-align: right;"><strong>${{ "%,.2f"|format(estimate.summary.grand_total * 0.95) }}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align: right; font-style: italic;">Final Retainage (Released 30 days post-CO):</td>
+                <td style="text-align: right;">5%</td>
+                <td style="text-align: right;">${{ "%,.2f"|format(estimate.summary.grand_total * 0.05) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION H: SUBMITTALS REQUIRED -->
+    <h2>H. Required Submittals & Approvals</h2>
+    
+    <p>
+        The following vendor submittals and engineered calculations are required for permit approval 
+        and must be obtained prior to or during construction:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 12%;">Finding Code</th>
+                <th style="width: 25%;">Item</th>
+                <th style="width: 38%;">Submittal Required</th>
+                <th style="width: 15%;">Timing</th>
+                <th style="width: 10%;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finding in findings %}
+            {% if finding.submittal_needed %}
+            <tr>
+                <td>{{ finding.finding_code }}</td>
+                <td style="font-size: 9pt;">{{ finding.code_citation }}</td>
+                <td style="font-size: 9pt;">{{ finding.submittal_needed }}</td>
+                <td style="font-size: 9pt;">
+                    {% if finding.severity == "Red" %}
+                    Before permit submission
+                    {% elif finding.severity == "Orange" %}
+                    With permit or prior to install
+                    {% else %}
+                    Prior to installation
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">Pending</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not (findings|selectattr('submittal_needed')|list) %}
+    <div class="info-box">
+        <p style="margin: 0;">No critical submittals identified in current plan set. Additional submittals may be required based on code review comments.</p>
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <!-- SECTION I: APPENDICES -->
+    <h2>I. Appendices</h2>
+
+    <h3>Appendix A: Assumptions & Clarifications</h3>
+    <ul>
+        <li>Pricing based on {{ project.spec_tier or "Standard" }} specification tier as defined in Section F</li>
+        <li>Site assumed accessible with standard equipment; no special access requirements</li>
+        <li>Utilities (water, sewer, electric, gas) assumed available at property line</li>
+        <li>Soil conditions assumed suitable for conventional footings; geotechnical report recommended</li>
+        <li>Pricing includes {{ jurisdiction.state }} state sales tax and applicable permit fees</li>
+        <li>Regional cost factors applied for {{ jurisdiction.municipality or jurisdiction.county }} area</li>
+        <li>Allowances included for owner-selected items (see estimate detail)</li>
+        <li>Estimate valid for 30 days from proposal date</li>
+    </ul>
+
+    <h3>Appendix B: Exclusions</h3>
+    <ul>
+        <li>Site survey and geotechnical investigation</li>
+        <li>Off-site utility extensions beyond property line</li>
+        <li>Special soil remediation or unsuitable soil replacement</li>
+        <li>Landscaping beyond basic grading and seeding</li>
+        <li>Driveway and hardscape beyond basic approach</li>
+        <li>Owners' personal property and furnishings</li>
+        <li>Architectural/engineering design fees</li>
+        <li>Land acquisition and financing costs</li>
+    </ul>
+
+    <h3>Appendix C: Specification Tier Definitions</h3>
+    <table class="no-break">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Category</th>
+                <th style="width: 25%;">Standard</th>
+                <th style="width: 25%;">Premium</th>
+                <th style="width: 25%;">Luxury</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Roofing</strong></td>
+                <td>Architectural shingle, 30-yr</td>
+                <td>Designer shingle or metal</td>
+                <td>Standing seam or tile</td>
+            </tr>
+            <tr>
+                <td><strong>Windows</strong></td>
+                <td>Vinyl, Energy Star</td>
+                <td>Fiberglass or Alum-clad</td>
+                <td>Wood clad, impact-rated</td>
+            </tr>
+            <tr>
+                <td><strong>Flooring</strong></td>
+                <td>Carpet, vinyl plank</td>
+                <td>Engineered hardwood</td>
+                <td>Solid hardwood, tile</td>
+            </tr>
+            <tr>
+                <td><strong>Cabinets</strong></td>
+                <td>Semi-custom, painted</td>
+                <td>Custom, stained</td>
+                <td>Full custom, premium wood</td>
+            </tr>
+            <tr>
+                <td><strong>Countertops</strong></td>
+                <td>Laminate or basic quartz</td>
+                <td>Mid-grade quartz/granite</td>
+                <td>Premium stone, waterfall edges</td>
+            </tr>
+            <tr>
+                <td><strong>Fixtures</strong></td>
+                <td>Builder-grade</td>
+                <td>Mid-range designer</td>
+                <td>Luxury brands</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Appendix D: Regional Adjustment Factors</h3>
+    <p>
+        Pricing adjusted for local market conditions in {{ jurisdiction.municipality or jurisdiction.county }}, {{ jurisdiction.state }}. 
+        Factors include labor rates, material delivery costs, and permit fee schedules.
+    </p>
+
+    <h3>Appendix E: Terms & Conditions</h3>
+    <ul>
+        <li><strong>Payment Terms:</strong> Progress payments per draw schedule (Section G)</li>
+        <li><strong>Change Orders:</strong> All changes to scope must be approved in writing with pricing</li>
+        <li><strong>Timeline:</strong> Estimated {{ 12 if findings|selectattr("severity", "equalto", "Red")|list|length == 0 else 16 }} weeks from permit to CO</li>
+        <li><strong>Warranty:</strong> 1-year builder warranty on workmanship; manufacturer warranties on materials</li>
+        <li><strong>Insurance:</strong> Builder's risk and general liability maintained throughout construction</li>
+    </ul>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p style="text-align: center; margin: 0;">
+            <strong>Eagle Eye Construction Review Services</strong><br>
+            This proposal is valid for 30 days from date of issue. All work subject to terms and conditions.<br>
+            Questions? Contact your project manager or email proposals@eagleeye.example.com
+        </p>
+    </div>
+
+</body>
+</html>

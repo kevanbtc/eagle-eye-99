@@ -1,0 +1,20 @@
+{
+  "doctype": "DocType",
+  "name": "Risk Register",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "fields": [
+    {"fieldname":"project","label":"Project","fieldtype":"Link","options":"Project","in_list_view":1},
+    {"fieldname":"severity","label":"Severity","fieldtype":"Select","options":"Red\nOrange\nYellow\nInfo","in_list_view":1},
+    {"fieldname":"discipline","label":"Discipline","fieldtype":"Data","in_list_view":1},
+    {"fieldname":"location","label":"Location","fieldtype":"Data"},
+    {"fieldname":"code_citation","label":"Code Citation","fieldtype":"Data"},
+    {"fieldname":"impact","label":"Impact","fieldtype":"Small Text"},
+    {"fieldname":"recommendation","label":"Recommendation","fieldtype":"Small Text"},
+    {"fieldname":"ve_alt","label":"VE Alternative","fieldtype":"Small Text"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "doctype": "DocType",
+  "name": "Assembly",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "allow_rename": 1,
+  "autoname": "field:code",
+  "quick_entry": 1,
+  "editable_grid": 0,
+  "fields": [
+    {"fieldname":"code","label":"Code (CSI/UniFormat)","fieldtype":"Data","reqd":1,"in_list_view":1},
+    {"fieldname":"name_en","label":"Name","fieldtype":"Data","reqd":1,"in_list_view":1},
+    {"fieldname":"trade","label":"Trade","fieldtype":"Data","in_list_view":1},
+    {"fieldname":"unit","label":"Unit","fieldtype":"Link","options":"UOM","in_list_view":1},
+    {"fieldname":"formula","label":"Quantity Formula","fieldtype":"Code","options":"Python"},
+    {"fieldname":"notes","label":"Notes","fieldtype":"Small Text"},
+    {"fieldname":"items","label":"Assembly Items","fieldtype":"Table","options":"Assembly Item"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

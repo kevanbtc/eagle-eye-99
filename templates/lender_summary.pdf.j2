@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lender Summary - {{ project.name }}</title>
+    <style>
+        @page { margin: 1in; }
+        body { font-family: Arial, sans-serif; font-size: 12pt; }
+        h1 { color: #1a365d; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #cbd5e0; padding: 10px; }
+        th { background-color: #edf2f7; }
+    </style>
+</head>
+<body>
+    <h1>Lender Summary</h1>
+    <p><strong>Project:</strong> {{ project.name }}</p>
+    <p><strong>Address:</strong> {{ project.address }}</p>
+    
+    <h2>Financial Summary</h2>
+    <table>
+        <tr><td><strong>Total Project Cost:</strong></td><td align="right">${{ "%,.2f"|format(summary.grand_total) }}</td></tr>
+        <tr><td>Risk Items (Critical):</td><td align="right">{{ risk_count }}</td></tr>
+        <tr><td>Contingency:</td><td align="right">${{ "%,.2f"|format(summary.contingency_amt) }}</td></tr>
+    </table>
+    
+    <p>This project has been reviewed for code compliance and pricing accuracy.</p>
+</body>
+</html>

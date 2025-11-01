@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eagleeye-postgres
+    environment:
+      POSTGRES_USER: eagle
+      POSTGRES_PASSWORD: eagle
+      POSTGRES_DB: eagleeye
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - eagleeye-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: eagleeye-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - eagleeye-net
+
+  seq:
+    image: datalust/seq:2024.3
+    container_name: eagleeye-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"
+    networks:
+      - eagleeye-net
+
+  api:
+    build: .
+    container_name: eagleeye-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=eagleeye;Username=eagle;Password=eagle
+      Seq__Url: http://seq:5341
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+      - seq
+    networks:
+      - eagleeye-net
+
+volumes:
+  pgdata:
+
+networks:
+  eagleeye-net:
+    driver: bridge

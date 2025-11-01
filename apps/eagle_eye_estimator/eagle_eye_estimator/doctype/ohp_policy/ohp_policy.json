@@ -1,0 +1,16 @@
+{
+  "doctype": "DocType",
+  "name": "OHP Policy",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "fields": [
+    {"fieldname":"name_en","label":"Name","fieldtype":"Data","reqd":1,"in_list_view":1},
+    {"fieldname":"op_pct","label":"Overhead %","fieldtype":"Float","default":10},
+    {"fieldname":"profit_pct","label":"Profit %","fieldtype":"Float","default":5},
+    {"fieldname":"rules","label":"Rules (JSON)","fieldtype":"Long Text","description":"Optional per-trade overrides"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

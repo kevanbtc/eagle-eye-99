@@ -1,0 +1,16 @@
+{
+  "doctype": "DocType",
+  "name": "Takeoff Package",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "fields": [
+    {"fieldname":"project","label":"Project","fieldtype":"Link","options":"Project","in_list_view":1},
+    {"fieldname":"plan_set","label":"Plan Set","fieldtype":"Data","in_list_view":1},
+    {"fieldname":"scale","label":"Scale","fieldtype":"Data"},
+    {"fieldname":"payload","label":"Measurements JSON","fieldtype":"Long Text","description":"JSON: sheets -> objects -> quantities"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

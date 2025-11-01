@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: eagleeye
+      POSTGRES_USER: eagle
+      POSTGRES_PASSWORD: eagle
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eagle -d eagleeye"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ../services/api
+    environment:
+      DATABASE_URL: postgresql+psycopg://eagle:eagle@db:5432/eagleeye
+      STORAGE_DIR: /app/storage
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - ../services/api/storage:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["8000:8000"]
+
+  web:
+    build: ../apps/web
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+    depends_on: [api]
+    ports: ["3000:3000"]
+
+volumes:
+  dbdata: {}

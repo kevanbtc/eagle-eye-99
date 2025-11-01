@@ -1,0 +1,385 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # DATABASE LAYER
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: eagle_eye_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-eagle_eye}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_password_123}
+      POSTGRES_DB: ${DB_NAME:-eagle_eye_db}
+      POSTGRES_INITDB_ARGS: "-c max_connections=200"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./infra/db/seeds/regional_factors.sql:/docker-entrypoint-initdb.d/02-regional-factors.sql
+      - ./infra/db/seeds/rules_definitions.sql:/docker-entrypoint-initdb.d/03-rules-definitions.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-eagle_eye}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: eagle_eye_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  minio:
+    image: minio/minio:latest
+    container_name: eagle_eye_minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================================
+  # MICROSERVICES LAYER
+  # ============================================================================
+  parser:
+    build:
+      context: ./services/parser
+      dockerfile: Dockerfile
+    container_name: eagle_eye_parser
+    environment:
+      SERVICE_NAME: parser
+      PORT: 8001
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql://${DB_USER:-eagle_eye}:${DB_PASSWORD:-dev_password_123}@postgres:5432/${DB_NAME:-eagle_eye_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_USE_SSL: "false"
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  rules:
+    build:
+      context: ./services/rules
+      dockerfile: Dockerfile
+    container_name: eagle_eye_rules
+    environment:
+      SERVICE_NAME: rules
+      PORT: 8002
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql://${DB_USER:-eagle_eye}:${DB_PASSWORD:-dev_password_123}@postgres:5432/${DB_NAME:-eagle_eye_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379/1
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  pricing:
+    build:
+      context: ./services/pricing
+      dockerfile: Dockerfile
+    container_name: eagle_eye_pricing
+    environment:
+      SERVICE_NAME: pricing
+      PORT: 8003
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql://${DB_USER:-eagle_eye}:${DB_PASSWORD:-dev_password_123}@postgres:5432/${DB_NAME:-eagle_eye_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379/2
+      TRADEBASE_API_KEY: ${TRADEBASE_API_KEY:-demo_key}
+      TRADEBASE_API_URL: ${TRADEBASE_API_URL:-https://api.tradebase.com/v1}
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  reports:
+    build:
+      context: ./services/reports
+      dockerfile: Dockerfile
+    container_name: eagle_eye_reports
+    environment:
+      SERVICE_NAME: reports
+      PORT: 8004
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql://${DB_USER:-eagle_eye}:${DB_PASSWORD:-dev_password_123}@postgres:5432/${DB_NAME:-eagle_eye_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379/3
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_USE_SSL: "false"
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: eagle_eye_api
+    environment:
+      SERVICE_NAME: api
+      PORT: 8000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql://${DB_USER:-eagle_eye}:${DB_PASSWORD:-dev_password_123}@postgres:5432/${DB_NAME:-eagle_eye_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379/4
+      PARSER_URL: http://parser:8001
+      RULES_URL: http://rules:8002
+      PRICING_URL: http://pricing:8003
+      REPORTS_URL: http://reports:8004
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_change_me}
+      API_KEY: ${API_KEY:-your_api_key_change_me}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      parser:
+        condition: service_healthy
+      rules:
+        condition: service_healthy
+      pricing:
+        condition: service_healthy
+      reports:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  # ============================================================================
+  # FRONTEND LAYER
+  # ============================================================================
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    container_name: eagle_eye_web
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  # ============================================================================
+  # MONITORING & LOGGING
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: eagle_eye_prometheus
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: eagle_eye_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infra/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================================
+  # DEVELOPMENT TOOLS
+  # ============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: eagle_eye_adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - eagle_eye_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  eagle_eye_network:
+    driver: bridge

@@ -1,0 +1,17 @@
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Infrastructure.deps.json
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Infrastructure.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Infrastructure.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Application.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Domain.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Domain.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\bin\Debug\net8.0\EagleEye.Application.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.AssemblyInfo.cs
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.4E36B4AB.Up2Date
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\refint\EagleEye.Infrastructure.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\EagleEye.Infrastructure.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Infrastructure\obj\Debug\net8.0\ref\EagleEye.Infrastructure.dll

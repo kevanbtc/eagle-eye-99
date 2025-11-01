@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Eagle Eye Proposal - {{ project.name }}</title>
+    <style>
+        @page { margin: 1in; }
+        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; }
+        h1 { color: #1a365d; font-size: 20pt; border-bottom: 3px solid #2c5282; padding-bottom: 10px; }
+        h2 { color: #2c5282; font-size: 16pt; margin-top: 30px; }
+        h3 { color: #2d3748; font-size: 13pt; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { border: 1px solid #cbd5e0; padding: 8px; text-align: left; }
+        th { background-color: #edf2f7; font-weight: bold; }
+        .red { color: #c53030; font-weight: bold; }
+        .orange { color: #c05621; font-weight: bold; }
+        .yellow { color: #975a16; font-weight: bold; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #cbd5e0; font-size: 9pt; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>EAGLE EYE PROPOSAL</h1>
+        <p><strong>{{ project.name }}</strong></p>
+        <p>{{ project.address }}</p>
+        <p>Date: {{ project.created_at or "2025-01-15" }}</p>
+    </div>
+
+    <!-- Section A: Executive Summary -->
+    <h2>A. Executive Summary</h2>
+    <p>
+        This proposal presents a comprehensive plan review and pricing estimate for {{ project.name }}.
+        Our analysis identifies {{ findings|length }} code compliance items requiring attention,
+        with {{ findings|selectattr("severity", "equalto", "Red")|list|length }} critical issues.
+    </p>
+    <p>
+        <strong>Total Project Cost:</strong> ${{ "%,.2f"|format(estimate.summary.grand_total) }}<br>
+        <strong>Timeline:</strong> Based on findings resolution, estimated 12-16 weeks<br>
+        <strong>Spec Tier:</strong> {{ project.spec_tier or "Standard" }}
+    </p>
+
+    <!-- Section B: Risk Register -->
+    <h2>B. Risk Register & Code Compliance</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Severity</th>
+                <th>Code Citation</th>
+                <th>Impact</th>
+                <th>Recommendation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finding in findings %}
+            <tr>
+                <td class="{{ finding.severity|lower }}">{{ finding.severity }}</td>
+                <td>{{ finding.code_citation }}</td>
+                <td>{{ finding.impact }}</td>
+                <td>{{ finding.recommendation }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Section C: Detailed Code Analysis -->
+    <h2>C. Detailed Code Analysis</h2>
+    {% for finding in findings %}
+    <h3>{{ finding.code_citation }} - {{ finding.discipline }}</h3>
+    <p><strong>Location:</strong> {{ finding.location }}</p>
+    <p><strong>Impact:</strong> {{ finding.impact }}</p>
+    <p><strong>Recommendation:</strong> {{ finding.recommendation }}</p>
+    {% if finding.ve_alt %}
+    <p><strong>Value Engineering Alternative:</strong> {{ finding.ve_alt }}</p>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Section D: Pricing Estimate -->
+    <h2>D. Pricing Estimate</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>WBS</th>
+                <th>Assembly</th>
+                <th>Line Item</th>
+                <th>UoM</th>
+                <th>Qty</th>
+                <th>Unit Cost</th>
+                <th>Ext Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trade, items in estimate.base.items() %}
+            <tr style="background-color: #f7fafc;">
+                <td colspan="7"><strong>{{ trade }}</strong></td>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.wbs }}</td>
+                <td>{{ item.assembly }}</td>
+                <td>{{ item.line_item }}</td>
+                <td>{{ item.uom }}</td>
+                <td>{{ "%.2f"|format(item.qty) }}</td>
+                <td>${{ "%.2f"|format(item.unit_cost) }}</td>
+                <td>${{ "%,.2f"|format(item.ext_cost) }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Summary</h3>
+    <table style="width: 50%; margin-left: auto;">
+        <tr><td>Subtotal:</td><td align="right">${{ "%,.2f"|format(estimate.summary.subtotal) }}</td></tr>
+        <tr><td>Overhead ({{ estimate.summary.overhead_pct }}%):</td><td align="right">${{ "%,.2f"|format(estimate.summary.overhead_amt) }}</td></tr>
+        <tr><td>Profit ({{ estimate.summary.profit_pct }}%):</td><td align="right">${{ "%,.2f"|format(estimate.summary.profit_amt) }}</td></tr>
+        <tr><td>Contingency ({{ estimate.summary.contingency_pct }}%):</td><td align="right">${{ "%,.2f"|format(estimate.summary.contingency_amt) }}</td></tr>
+        <tr style="font-weight: bold; background-color: #edf2f7;">
+            <td>Grand Total:</td>
+            <td align="right">${{ "%,.2f"|format(estimate.summary.grand_total) }}</td>
+        </tr>
+    </table>
+
+    <!-- Section E: Draw Schedule -->
+    <h2>E. Payment & Draw Schedule</h2>
+    <p>Proposed payment schedule based on project milestones:</p>
+    <table>
+        <thead>
+            <tr><th>Draw #</th><th>Milestone</th><th>Amount</th><th>% Complete</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>Contract Signing & Permits</td><td>${{ "%,.2f"|format(estimate.summary.grand_total * 0.10) }}</td><td>10%</td></tr>
+            <tr><td>2</td><td>Foundation Complete</td><td>${{ "%,.2f"|format(estimate.summary.grand_total * 0.20) }}</td><td>30%</td></tr>
+            <tr><td>3</td><td>Framing & Rough-In Complete</td><td>${{ "%,.2f"|format(estimate.summary.grand_total * 0.30) }}</td><td>60%</td></tr>
+            <tr><td>4</td><td>Drywall & Finishes</td><td>${{ "%,.2f"|format(estimate.summary.grand_total * 0.25) }}</td><td>85%</td></tr>
+            <tr><td>5</td><td>Final Completion</td><td>${{ "%,.2f"|format(estimate.summary.grand_total * 0.15) }}</td><td>100%</td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p><strong>{{ company.name }}</strong> | {{ company.address }} | {{ company.phone }} | {{ company.email }}</p>
+        <p>This proposal is valid for 30 days. All work subject to final plan approval and permits.</p>
+    </div>
+</body>
+</html>

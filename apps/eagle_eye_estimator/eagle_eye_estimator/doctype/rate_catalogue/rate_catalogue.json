@@ -1,0 +1,19 @@
+{
+  "doctype": "DocType",
+  "name": "Rate Catalogue",
+  "module": "Eagle Eye Estimator",
+  "custom": 0,
+  "istable": 0,
+  "allow_rename": 1,
+  "fields": [
+    {"fieldname":"region","label":"Region","fieldtype":"Data","in_list_view":1},
+    {"fieldname":"vendor","label":"Vendor","fieldtype":"Link","options":"Supplier","in_list_view":1},
+    {"fieldname":"effective_from","label":"Effective From","fieldtype":"Date","in_list_view":1},
+    {"fieldname":"base_currency","label":"Currency","fieldtype":"Link","options":"Currency","default":"USD"},
+    {"fieldname":"notes","label":"Notes","fieldtype":"Small Text"},
+    {"fieldname":"lines","label":"Lines (JSON)","fieldtype":"Long Text","description":"Optional JSON array of {item, unit_cost, unit, trade, vendor_ref}"}
+  ],
+  "permissions": [
+    {"role":"System Manager","read":1,"write":1,"create":1,"delete":1}
+  ]
+}

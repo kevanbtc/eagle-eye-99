@@ -1,0 +1,15 @@
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\bin\Debug\net8.0\EagleEye.Application.deps.json
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\bin\Debug\net8.0\EagleEye.Application.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\bin\Debug\net8.0\EagleEye.Application.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\bin\Debug\net8.0\EagleEye.Domain.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\bin\Debug\net8.0\EagleEye.Domain.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.csproj.AssemblyReference.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.AssemblyInfoInputs.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.AssemblyInfo.cs
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.csproj.CoreCompileInputs.cache
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.B81972E4.Up2Date
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\refint\EagleEye.Application.dll
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\EagleEye.Application.pdb
+C:\Users\Kevan\Downloads\eagle eye 2\EagleEye.NET\src\EagleEye.Application\obj\Debug\net8.0\ref\EagleEye.Application.dll
